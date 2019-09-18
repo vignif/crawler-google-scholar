@@ -17,3 +17,7 @@ get_stats_parallel.py wants to exploit this strategy.
 
 A proper timing sleep function must be setted inside each file in order to avoid rejection by the server.
 if we are requesting informations too fast the server will answer always with an [Error 429 Too Many Requests].
+
+the serial script is able to query at a speed of 0,7 researcher per second
+
+the parallel script is currently not running, from a local machine pov should be able to outperform the previous example, but the server limit threshold must be respected.
