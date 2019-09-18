@@ -4,23 +4,28 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import time
+##this script lets you collect researcher statistics from a list of researchers
+##it crawls google scholar and collects
+## num of citations last 5 years
+## num of citations per year of last 5 years
+## h-index
+## i10-index
+
+
 
 #evaluate performances
 start = time.time()
 ##Definitions
-
 web_site = 'https://scholar.google.com/'
 search_url = 'https://scholar.google.com/citations?hl=it&view_op=search_authors&mauthors='
 
+#Source excel for researcher names
+#names are in first column
+#surname are in second column
 my_sheet = 'Tabellenblatt1'
 file_name = 'Research Statistics.xlsx' # name of your excel file
 
-
 df = read_excel(file_name, sheet_name = my_sheet)
-
-####
-
-
 
 def download_mainpage(name, surname):
     r=requests.get(search_url + name + "+" + surname)
@@ -39,7 +44,6 @@ def save_in_file(f, i, Data):
     for i in Data[3]:
         f.write(i + ", ")
     f.write("; " + Data[4] + "; " + Data[5] + "; " + Data[6] + " ;" + Data[7]+ "; " + Data[8] + "; " + Data[9] + "\n")
-
 
 def init_file():
     f=open("stats.txt","a")
