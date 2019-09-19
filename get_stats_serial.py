@@ -108,9 +108,9 @@ def main():
         name=name_surname()[i][0]
         surname=name_surname()[i][1]
 
-        print("Status: %3.2f%%" % (i/size_db*100))
+        #print("Status: %3.2f%%" % (i/size_db*100))
 
-        print("\n \n")
+        #print("\n \n")
         soup = BeautifulSoup(download_mainpage(name, surname), 'html.parser')
         result=soup.find("h3",{'class':'gs_ai_name'})
 

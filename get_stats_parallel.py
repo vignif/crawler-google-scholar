@@ -1,59 +1,20 @@
+import aiohttp
+import asyncio
 from pandas import read_excel
-import math
-import requests
+import time
 from bs4 import BeautifulSoup
 import re
-import time
-import asyncio
 
-#evaluate performances
-start = time.time()
-##Definitions
-
-web_site = 'https://scholar.google.com/'
-search_url = 'https://scholar.google.com/citations?hl=it&view_op=search_authors&mauthors='
-
+web_site = 'https://scholar.google.com'
 my_sheet = 'Tabellenblatt1'
 file_name = 'Research Statistics.xlsx' # name of your excel file
-
-
+headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
 df = read_excel(file_name, sheet_name = my_sheet)
 
-####
 
-
-
-def download_mainpage(name, surname):
-    r=requests.get(search_url + name + "+" + surname)
-    #print(r.status_code)
-    return r.text
-
-def download_subpage(link):
-    r1=requests.get(web_site + link)
-    return r1.text
-
-def save_in_file(f, i, Data):
-    f.write(df.iloc[i][0] + "; " + df.iloc[i][1] + "; " + df.iloc[i][2] + "; " +
-    str(df.iloc[i][3]) + "; " + str(df.iloc[i][4]) + "; " + str(df.iloc[i][5]) + "; " +
-    str(df.iloc[i][6]) + "; " + str(df.iloc[i][7]) + "; " + str(df.iloc[i][8]) + "; ")
-    f.write(Data[0] + "; " + Data[1] + "; " + Data[2] + "; ")
-    for i in Data[3]:
-        f.write(i + ", ")
-    f.write("; " + Data[4] + "; " + Data[5] + "; " + Data[6] + " ;" + Data[7]+ "; " + Data[8] + "; " + Data[9] + "\n")
-
-
-def init_file():
-    print("init_file")
-    f=open("stats.txt","a")
-    #create base columns Names
-    for i in range(len(df.columns)):
-        f.write(df.columns[i] + "; ")
-    f.write("\n")
-    return f
-
-def close_file(f):
-    print("File saved \n")
-    f.close()
+def cut(L,n):
+    'takes a list [L] and crop the first n elements'
+    return L[:n]
 
 def name_surname():
     all=[]
@@ -64,9 +25,10 @@ def name_surname():
             all.append([name, surname])
         else:
             break
+    #all=cut(all,4)
     return all
 
-def find_and_extract_data(soup):
+async def find_and_extract_data(soup):
     central_table=soup.find(id="gsc_prf_w")
     description=central_table.find("div", {'class':"gsc_prf_il"}).text
     fields=[]
@@ -91,47 +53,94 @@ def find_and_extract_data(soup):
     return Data
 
 
-def data_not_available(f, name, surname, i):
-    print("Data not available for " + name + " "+ surname + " in index " + str(i))
-    f.write("Data Not available for " + name + " " + surname + "\n")
+def define_urls():
+    base_url="https://scholar.google.com/citations?hl=it&view_op=search_authors&mauthors="
+    #base_url="http://127.0.0.1:5000/"
+    all=name_surname()
+    urls=[base_url+name_surname()[i][0] + "+"+name_surname()[i][1] for i in range(len(name_surname()))]
+    return urls
+
+async def save_in_file(f, name, Data):
+    temp_name_list=name.split('+')
+    name=temp_name_list[0]
+    surname=temp_name_list[1]
+    #print("saving: " + name + " " + surname)
+    #f.write(df.iloc[i][0] + "; " + df.iloc[i][1] + "; " + df.iloc[i][2] + "; " +
+    #str(df.iloc[i][3]) + "; " + str(df.iloc[i][4]) + "; " + str(df.iloc[i][5]) + "; " +
+    #str(df.iloc[i][6]) + "; " + str(df.iloc[i][7]) + "; " + str(df.iloc[i][8]) + "; ")
+    f.write(name + "; " + surname + "; ")
+    f.write(Data[0] + "; " + Data[1] + "; " + Data[2] + "; ")
+    for i in Data[3]:
+        f.write(i + ", ")
+    f.write("; " + Data[4] + "; " + Data[5] + "; " + Data[6] + " ;" + Data[7]+ "; " + Data[8] + "; " + Data[9] + "\n")
+
+def init_file():
+    f=open("stats_parallel.txt","a")
+    #create base columns Names
+    for i in range(len(df.columns)):
+        f.write(df.columns[i] + "; ")
+    f.write("\n")
+    return f
+
+def close_file(f):
+    print("File saved \n")
+    f.close()
+
+async def fetch_sub(session, url, f, name):
+    async with session.get(url, timeout=60) as response:
+        #time.sleep(0.2) #avoid error 429
+        assert response.status == 200
+        #print("fetching: " + name)
+        #print(type(await response.text()))
+        html = await response.text()
+        soup = BeautifulSoup(html, 'html.parser')
+        Data = await find_and_extract_data(soup)
+        await save_in_file(f, name, Data)
+        #print(response)
+        #print(await response.reason)
+
+        #rint(await response.status_code)
+        #print(response.text())
+        #return await response.status()
+
+
+async def fetch(session, url, f):
+    async with session.get(url, timeout=60) as response:
+        #time.sleep(0.2) #avoid error 429
+        soup=BeautifulSoup(await response.text(), 'html.parser')
+        result=soup.find("h3",{'class':'gs_ai_name'})
+        #print(type(result.text))
+        if result is not None:
+            link= result.find('a', href = re.compile(r'[/]([a-z]|[A-Z])\w+')).attrs['href']
+            #print(web_site+link)
+            assert response.status==200
+            #print('\n')
+            name=url[75:]
+            await fetch_sub(session, web_site+link, f, name)
+        #return await response.text()
+
+
+async def fetch_all_urls(session, urls, loop, f):
+    results = await asyncio.gather(*[fetch(session, url, f) for url in urls],
+    return_exceptions=True)
+    return results
 
 async def main():
-    queue = asyncio.Queue()
-    #print("Let's download the statistics from google scholar\n")
+    start = time.time()
+    #aiohttp.ClientSession.head(headers)
     f=init_file()
-    all=name_surname()
-    size_db = len(name_surname())
-
-
-    for i in range(size_db):
-        name=name_surname()[i][0]
-        surname=name_surname()[i][1]
-
-        print("Status: %3.2f%%" % (i/size_db*100))
-        print("\n")
-
-        soup = BeautifulSoup(download_mainpage(name, surname), 'html.parser')
-        result=soup.find("h3",{'class':'gs_ai_name'})
-
-        #if is not able to find the person, tell me and skip the data in the db
-        if result is None:
-            data_not_available(f, name, surname, i)
-            continue
-        else:
-            link= result.find('a', href = re.compile(r'[/]([a-z]|[A-Z])\w+')).attrs['href']
-
-            #def open_profile_page()
-            soup = BeautifulSoup(download_subpage(link), 'html.parser')
-
-            Data=find_and_extract_data(soup)
-            save_in_file(f, i, Data)
+    loop = asyncio.get_event_loop()
+    connector = aiohttp.TCPConnector(limit=100)
+    async with aiohttp.ClientSession(connector=connector, loop=loop, headers=headers) as session:
+        urls=define_urls()
+        html = await fetch_all_urls(session, urls, loop, f)
+        #print(html)
 
     close_file(f)
-
     end = time.time()
     print("elapsed time: ")
     print(end - start)
 
-
-if __name__== "__main__":
-    asyncio.run(main())
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
