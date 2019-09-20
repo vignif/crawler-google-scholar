@@ -6,7 +6,11 @@ from pandas import read_excel
 import time
 
 
-debug = 1
+debug = 0
+
+my_sheet = 'Tabellenblatt1'
+file_name = 'Research Statistics.xlsx' # name of your excel file
+df = read_excel(file_name, sheet_name = my_sheet)
 
 
 def enable_debug_mode(debug_bool):
@@ -30,17 +34,23 @@ def init_file():
     f.write("\n")
     return f
 
+def close_file(f):
+    print("File saved! \n")
+    f.close()
 
 async def get_name(url):
     name=url[to_cut:]
     return name
 
-
-async def save_in_file(f, name, Data):
-    print("name: ",name)
+def split_name(name):
     temp_name_list=name.split('+')
     name=temp_name_list[0]
     surname=temp_name_list[1]
+    return name, surname
+
+async def save_in_file(f, name, Data):
+    print("name: ",name)
+    name, surname = split_name(name)
     print("saving: " + name + " " + surname)
     f.write(name + "; " + surname + "; ")
     f.write(Data[0] + "; " + Data[1] + "; " + Data[2] + "; ")
@@ -85,28 +95,34 @@ async def find_and_extract_data(soup):
     Data = [num_cit, h_index, i10_index, fields, n14, n15, n16, n17, n18, n19]
     return Data
 
+def data_not_available(file, name):
+    name, surname = split_name(name)
+    file.write("Data not available for " + name + " " + surname + "\n")
 
 async def fetch_all(url):
     # connect to the server
     async with aiohttp.ClientSession() as session:
         # create get request
         async with session.get(url) as response:
+            name= await get_name(url)
             #assert response.status==200
+            f=open("stats_parallel.txt","a")
             response = await response.text()
             soup=bs4.BeautifulSoup(response, 'html.parser')
             result=soup.find("h3",{'class':'gs_ai_name'}) #find name and its url
-            if result is not None:
+            if result is None:
+                data_not_available(f, name)
+            else:
                 link= result.find('a', href = re.compile(r'[/]([a-z]|[A-Z])\w+')).attrs['href']
 
                 #create sub get request
                 async with session.get(web_site+link) as subresponse:
-                    name= await get_name(url)
                     #print("start: " + name)
                     html = await subresponse.text()
                     soup = bs4.BeautifulSoup(html, 'html.parser')
                     Data = await find_and_extract_data(soup)
                     #print(await get_name(web_site+link))
-                    f=open("stats_parallel.txt","a")
+
                     await save_in_file(f, name, Data)
 
                     #print("finish: ", name)
@@ -115,10 +131,6 @@ async def fetch_all(url):
 
 
 
-
-my_sheet = 'Tabellenblatt1'
-file_name = 'Research Statistics.xlsx' # name of your excel file
-df = read_excel(file_name, sheet_name = my_sheet)
 
 def cut(L,n):
     'takes a list [L] and crop the first n elements'
@@ -137,8 +149,6 @@ def create_links():
             break
     #all=cut(all,3)
     return all
-
-
 
 def print_all_pages():
     f=init_file()
