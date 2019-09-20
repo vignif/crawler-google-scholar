@@ -3,7 +3,7 @@ import asyncio
 import bs4
 import re
 from pandas import read_excel
-debug = 1
+debug = 1  
 
 
 def enable_debug_mode(debug_bool):
@@ -31,6 +31,7 @@ async def get_name(url):
 
 
 async def save_in_file(f, name, Data):
+    print("name: ",name)
     temp_name_list=name.split('+')
     name=temp_name_list[0]
     surname=temp_name_list[1]
@@ -44,7 +45,6 @@ async def save_in_file(f, name, Data):
 async def find_and_extract_data(soup):
     print("find_and_extract_data")
     central_table=soup.find(id="gsc_prf_w")
-
     description=central_table.find("div", {'class':"gsc_prf_il"}).text
     fields=[]
     for field in central_table.find("div", {'class':"gsc_prf_il", 'id':'gsc_prf_int'}).contents:
@@ -85,7 +85,7 @@ async def fetch_all(url):
     async with aiohttp.ClientSession() as session:
         # create get request
         async with session.get(url) as response:
-            assert response.status==200
+            #assert response.status==200
             response = await response.text()
             soup=bs4.BeautifulSoup(response, 'html.parser')
             result=soup.find("h3",{'class':'gs_ai_name'}) #find name and its url
@@ -94,7 +94,7 @@ async def fetch_all(url):
 
                 #create sub get request
                 async with session.get(web_site+link) as subresponse:
-                    name= await get_name(web_site+link)
+                    name= await get_name(url)
                     print("start: " + name)
                     html = await subresponse.text()
                     soup = bs4.BeautifulSoup(html, 'html.parser')
@@ -102,6 +102,7 @@ async def fetch_all(url):
                     #print(await get_name(web_site+link))
                     await save_in_file(open("stats_parallel.txt","a"), name, Data)
                     print("finish: ", name)
+                    print("\n")
 
 
 
@@ -110,6 +111,11 @@ async def fetch_all(url):
 my_sheet = 'Tabellenblatt1'
 file_name = 'Research Statistics.xlsx' # name of your excel file
 df = read_excel(file_name, sheet_name = my_sheet)
+
+def cut(L,n):
+    'takes a list [L] and crop the first n elements'
+    return L[:n]
+
 
 def create_links():
     # base_url="https://scholar.google.com/citations?hl=it&view_op=search_authors&mauthors="
@@ -128,7 +134,7 @@ def create_links():
 
 def print_all_pages():
     pages = create_links()
-
+    #print(pages)
     tasks =  []
     loop = asyncio.new_event_loop()
     for page in pages:
