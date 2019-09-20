@@ -16,8 +16,16 @@ import time
 #evaluate performances
 start = time.time()
 ##Definitions
-web_site = 'https://scholar.google.com/'
-search_url = 'https://scholar.google.com/citations?hl=it&view_op=search_authors&mauthors='
+def enable_debug_mode(debug_bool):
+    if debug_bool == True:
+        web_site = 'http://127.0.0.1:5000'
+        base_url="http://127.0.0.1:5000/"
+    else:
+        web_site = 'https://scholar.google.com'
+        base_url="https://scholar.google.com/citations?hl=it&view_op=search_authors&mauthors="
+    return web_site, base_url
+
+web_site, base_url=enable_debug_mode(False)
 
 #Source excel for researcher names
 #names are in first column
@@ -28,7 +36,7 @@ file_name = 'Research Statistics.xlsx' # name of your excel file
 df = read_excel(file_name, sheet_name = my_sheet)
 
 def download_mainpage(name, surname):
-    r=requests.get(search_url + name + "+" + surname)
+    r=requests.get(base_url + name + "+" + surname)
     print(r.status_code)
     return r.text
 
@@ -89,6 +97,7 @@ def find_and_extract_data(soup):
     n17 = hist[-3].text
     n18 = hist[-2].text
     n19 = hist[-1].text
+    print(Data)
     Data = [num_cit, h_index, i10_index, fields, n14, n15, n16, n17, n18, n19]
     return Data
 

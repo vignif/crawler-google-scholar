@@ -6,7 +6,7 @@ from pandas import read_excel
 import time
 
 
-debug = 0
+debug = 1
 
 my_sheet = 'Tabellenblatt1'
 file_name = 'Research Statistics.xlsx' # name of your excel file
@@ -95,6 +95,14 @@ async def find_and_extract_data(soup):
     Data = [num_cit, h_index, i10_index, fields, n14, n15, n16, n17, n18, n19]
     return Data
 
+
+async def store_in_list(L, name, Data):
+    name, surname = split_name(name)
+    L.append(surname, name, Data)
+    return L
+
+
+
 def data_not_available(file, name):
     name, surname = split_name(name)
     file.write("Data not available for " + name + " " + surname + "\n")
@@ -114,7 +122,7 @@ async def fetch_all(url):
                 data_not_available(f, name)
             else:
                 link= result.find('a', href = re.compile(r'[/]([a-z]|[A-Z])\w+')).attrs['href']
-
+                L=[]
                 #create sub get request
                 async with session.get(web_site+link) as subresponse:
                     #print("start: " + name)
@@ -122,12 +130,12 @@ async def fetch_all(url):
                     soup = bs4.BeautifulSoup(html, 'html.parser')
                     Data = await find_and_extract_data(soup)
                     #print(await get_name(web_site+link))
-
-                    await save_in_file(f, name, Data)
+                    a = await store_in_list(L, name, Data)
+                    #await save_in_file(f, name, Data)
 
                     #print("finish: ", name)
                     #print("\n")
-
+            print(a)
 
 
 
