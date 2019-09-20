@@ -3,7 +3,10 @@ import asyncio
 import bs4
 import re
 from pandas import read_excel
-debug = 1  
+import time
+
+
+debug = 1
 
 
 def enable_debug_mode(debug_bool):
@@ -19,11 +22,14 @@ def enable_debug_mode(debug_bool):
 
 web_site, base_url, to_cut=enable_debug_mode(debug)
 
-async def save_to_file(response):
-    f=open("file.txt","a")
-    f.write(response)
+def init_file():
+    f=open("stats_parallel.txt","a")
+    #create base columns Names
+    for i in range(len(df.columns)):
+        f.write(df.columns[i] + "; ")
     f.write("\n")
-    f.close()
+    return f
+
 
 async def get_name(url):
     name=url[to_cut:]
@@ -95,14 +101,16 @@ async def fetch_all(url):
                 #create sub get request
                 async with session.get(web_site+link) as subresponse:
                     name= await get_name(url)
-                    print("start: " + name)
+                    #print("start: " + name)
                     html = await subresponse.text()
                     soup = bs4.BeautifulSoup(html, 'html.parser')
                     Data = await find_and_extract_data(soup)
                     #print(await get_name(web_site+link))
-                    await save_in_file(open("stats_parallel.txt","a"), name, Data)
-                    print("finish: ", name)
-                    print("\n")
+                    f=open("stats_parallel.txt","a")
+                    await save_in_file(f, name, Data)
+
+                    #print("finish: ", name)
+                    #print("\n")
 
 
 
@@ -133,6 +141,7 @@ def create_links():
 
 
 def print_all_pages():
+    f=init_file()
     pages = create_links()
     #print(pages)
     tasks =  []
@@ -142,3 +151,4 @@ def print_all_pages():
 
     loop.run_until_complete(asyncio.wait(tasks))
     loop.close()
+    close_file(f)
