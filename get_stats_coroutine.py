@@ -6,7 +6,7 @@ from pandas import read_excel
 import time
 
 
-debug = 1
+debug = False
 
 my_sheet = 'Tabellenblatt1'
 file_name = 'Research Statistics.xlsx' # name of your excel file
@@ -27,7 +27,7 @@ def enable_debug_mode(debug_bool):
 web_site, base_url, to_cut=enable_debug_mode(debug)
 
 def init_file():
-    f=open("stats_parallel.txt","a")
+    f=open("stats_parallel_alltime.txt","a")
     #create base columns Names
     for i in range(len(df.columns)):
         f.write(df.columns[i] + "; ")
@@ -81,10 +81,13 @@ async def find_and_extract_data(soup):
     for i in range(len(hist)):
         if isinstance(hist[i], bs4.element.Tag):
             hist.append(hist[i])
+	##take stats all time index [0] , [2] , [4]
+	##take stats last 5 years index [1], [3], [5]
 
-    num_cit  = num_cit_index[1].text
-    h_index  = num_cit_index[3].text
-    i10_index= num_cit_index[5].text
+
+    num_cit  = num_cit_index[0].text #all time
+    h_index  = num_cit_index[2].text
+    i10_index= num_cit_index[4].text
     n14 = hist[-6].text
     n15 = hist[-5].text
     n16 = hist[-4].text
@@ -98,7 +101,7 @@ async def find_and_extract_data(soup):
 
 async def store_in_list(L, name, Data):
     name, surname = split_name(name)
-    L.append(surname, name, Data)
+    L.append([surname, name, Data])
     return L
 
 
@@ -114,8 +117,9 @@ async def fetch_all(url):
         async with session.get(url) as response:
             name= await get_name(url)
             #assert response.status==200
-            f=open("stats_parallel.txt","a")
+            f=open("stats_parallel_alltime.txt","a")
             response = await response.text()
+#	    print(response.reason)
             soup=bs4.BeautifulSoup(response, 'html.parser')
             result=soup.find("h3",{'class':'gs_ai_name'}) #find name and its url
             if result is None:
@@ -155,7 +159,7 @@ def create_links():
             all.append(base_url+name+"+"+surname)
         else:
             break
-    #all=cut(all,3)
+    all=cut(all,3)
     return all
 
 def print_all_pages():
