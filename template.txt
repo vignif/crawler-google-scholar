@@ -1,0 +1,1 @@
+Surname; Firstname; n citations; h-index; i10-index; fields_of_research; n_cit_year(-5);n_cit_year(-4); n_cit_year(-3); n_cit_year(-2); n_cit_year(-1); n_cit_current_year
