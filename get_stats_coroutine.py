@@ -144,7 +144,7 @@ async def fetch_all(url,f):
 
 def cut(L,n):
     'takes a list [L] and crop the first n elements'
-    if n=0:
+    if n==0:
         n=len(L)
     return L[:n]
 
