@@ -1,15 +1,17 @@
-"""this script crawls for the statistics of researchers in google scholar
-    and save them in a file called: co_data.txt
-    the source information must be an .xlsx file with two columns [surname, name]
-    per each researcher provided in the file it gets
-    [tot # citations; h-index; i10_index; fields_of_research; #citations last 5 years]
-    the crawler exploit the informations via the description of the tags in the html of google scholar
+"""
+this script crawls for the statistics of researchers in google scholar
+and save them in a file called: co_data.txt
+the source information must be an .xlsx file with two columns [surname, name]
+very little preprocessing is made for these values so be sure to use UTF-8 for the enconding
+per each researcher provided in the file it gets
+[tot # citations; h-index; i10_index; fields_of_research; #citations last 5 years]
+the crawler exploit the informations via the description of the tags in the html of google scholar
+be aware that too many requests to a server might interrupt your script, please
+set a proper sleep timing
+debug mode is also available for crawl local hosted websites.
 
-    be aware that too many requests to a server might interrupt your script, please
-    set a proper sleep timing
-
-    debug mode is also available for crawl local hosted websites.
-    """
+if a 429 error is returned, google a bit how to overcome it
+"""
 
 import aiohttp
 import asyncio
@@ -17,62 +19,37 @@ import bs4
 import re
 from pandas import read_excel
 import time
+from functions import *
 
-
+# set debut to true if you run a local server for testing
 debug = False
 
-my_sheet = 'Tabellenblatt1'
-file_name = 'Research Statistics.xlsx' # name of your excel file
+# set verbose to true to get additional infos in nested functions
+verbose = True
+
+# input file and table of the xlsx
+my_sheet = 'newFile'
+file_name = 'myFile.xlsx' # name of your excel file
+
+# define your output filename
+output = "stats.txt"
 
 df = read_excel(file_name, sheet_name = my_sheet)
 
 
-def enable_debug_mode(debug_bool):
-    if debug_bool == True:
-        web_site = 'http://127.0.0.1:5000'
-        base_url="http://127.0.0.1:5000/"
-        to_cut=len(base_url)
-    else:
-        web_site = 'https://scholar.google.com'
-        base_url="https://scholar.google.com/citations?hl=it&view_op=search_authors&mauthors="
-        to_cut=len(base_url)
-    return web_site, base_url, to_cut
-
 web_site, base_url, to_cut=enable_debug_mode(debug)
 
-def init_file():
-    f=open("co_data.txt","a")
-    #create base columns Names
-    template=open('template.txt','r')
-    f.write(template.read())
-    return f
-
-def close_file(f):
-    print("File saved! \n")
-    f.close()
 
 async def get_name(url):
     name=url[to_cut:]
     return name
 
-def split_name(name):
-    temp_name_list=name.split('+')
-    name=temp_name_list[0]
-    surname=temp_name_list[1]
-    return name, surname
-
-async def save_in_file(f, name, Data):
-    #print("name: ",name)
-    name, surname = split_name(name)
-    # print("saving: " + name + " " + surname)
-    f.write(name + "; " + surname + "; ")
-    f.write(Data[0] + "; " + Data[1] + "; " + Data[2] + "; ")
-    for i in Data[3]:
-        f.write(i + ", ")
-    f.write("; " + Data[4] + "; " + Data[5] + "; " + Data[6] + " ;" + Data[7]+ "; " + Data[8] + "; " + Data[9] + "\n")
 
 async def find_and_extract_data(soup):
-    # print("find_and_extract_data")
+    """
+    This function parse the html structure and look for specific fields of the css
+    It is returning the statistic of the researcher up to 5 years ago in as a list [Data]
+    """
     central_table=soup.find(id="gsc_prf_w")
     description=central_table.find("div", {'class':"gsc_prf_il"}).text
     fields=[]
@@ -107,22 +84,24 @@ async def find_and_extract_data(soup):
     return Data
 
 
-async def store_in_list(L, name, Data):
-    name, surname = split_name(name)
-    L.append([surname, name, Data])
-    return L
-
-def data_not_available(file, name):
-    name, surname = split_name(name)
-    file.write("Data not available for " + name + " " + surname + "\n")
-
 async def fetch_all(url,f):
-    # connect to the server
+    """
+    Core function of the whole Program
+    fetch_all is iteratively requesting an html page and calling other functions
+    it's receiving as input the complete url with appended name and surname of the researcher
+    for parsing and saving data without idle time
+    """
     async with aiohttp.ClientSession() as session:
         # create get request
         async with session.get(url) as response:
             name= await get_name(url)
+            status = response.status
             response = await response.text()
+            # check on server response
+            if status == 429:
+                print("too many requests to server, error code: 429")
+            if verbose:
+                print(name, status)
             soup=bs4.BeautifulSoup(response, 'html.parser')
             result=soup.find("h3",{'class':'gs_ai_name'}) #find name and its url
             if result is None:
@@ -139,46 +118,68 @@ async def fetch_all(url,f):
                     Data = await find_and_extract_data(soup)
                     #print(await get_name(web_site+link))
                     a = await store_in_list(L, name, Data)
+
                     await save_in_file(f, name, Data)
 
 
 def cut(L,n):
-    'takes a list [L] and crop the first n elements'
+    """
+    Takes a list [L] and crop the first n elements
+    this fuction is useful for testing
+    i.e if your file is really big and you just want to receive the stats of
+    the first 5 researcher set n=5 in main()
+    """
     if n==0:
         n=len(L)
     return L[:n]
 
 
 def create_links(n):
-    # base_url="https://scholar.google.com/citations?hl=it&view_op=search_authors&mauthors="
+    """
+    Given a name and surname of the input file, this function create the url string
+    to be given for the request
+    """
     all=[]
     for i in range(len(df)):
         name = df.iloc[i][1]
         surname = df.iloc[i][0]
-        if isinstance(name, str):
+        if isinstance(name, str) and isinstance(surname,str): # the couple name, surname must be given in the xlsx file
             all.append(base_url+name+"+"+surname)
         else:
             break
     all=cut(all,n)
     return all
 
-def print_all_pages(n):
-    f=init_file()
+def print_all_pages(n, out):
+    """
+    iteratively initiating a new task for crawls
+    higher level of fetch_all, this function is computing the complete urls
+    and passing them to fetch_all for a deeper investigation
+    """
+    f=init_file(out)
     pages = create_links(n)
     #print(pages)
     tasks =  []
     loop = asyncio.new_event_loop()
-    for page in pages:
-        tasks.append(loop.create_task(fetch_all(page,f)))
-
-    loop.run_until_complete(asyncio.wait(tasks))
+    try:
+        for page in pages:
+            tasks.append(loop.create_task(fetch_all(page,f)))
+        loop.run_until_complete(asyncio.wait(tasks))
+    except KeyboardInterrupt:
+        print("Program terminated by user")
+        print("<---Bye--->")
     loop.close()
     close_file(f)
 
-def main():
-    n=0 #check for all the names in the file_name
-        #set n to crawl only the first [n] rows of your researcher file_name
-    print_all_pages(n)
+
+def main(out_file):
+    """
+    main function check for all the names in the file_name
+    set n to crawl only the first [n] rows of your researcher file_name
+    if n=0 it takes all the rows of the input file
+    """
+    n=0
+    print_all_pages(n, out_file)
 
 if __name__ == "__main__":
-    main()
+    main(output)

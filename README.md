@@ -1,4 +1,4 @@
-# crawler-google-scholar
+# crawler-google-scholar ![](spider.png)
 
 this repo presents an automatic way of downloading statistics of a set of researchers or professors from the google scholar.
 giving as input a list of [name surname] of researchers it retrieves data from google scholar such as {# of publications, h-index, i10-index and others}
@@ -21,5 +21,16 @@ if we are requesting informations too fast, the server will answer always with a
 the serial script has been tested to query at a speed of 0,7 researcher per second
 the coroutine script has been tested to query at a speed of 0.05 researcher per second
 
-## Recommended script for downloading stats : get_stats_coroutine.py
-## Recommended script for downloading profile images : get_picts.py
+## Use
+the input information must be an .xlsx file with two columns [surname, name]
+- Run **get_stats_coroutine.py**
+- output **stats.txt**
+
+Recommended script for downloading stats : **get_stats_coroutine.py**
+
+
+Recommended script for downloading profile images : **get_picts.py**
+
+
+
+*image with the courtesy of icons8.com*
