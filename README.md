@@ -34,3 +34,11 @@ Recommended script for downloading profile images : **get_picts.py**
 
 
 *image with the courtesy of icons8.com*
+
+
+## License
+
+[![License](http://img.shields.io/:license-mit-blue.svg?style=flat-square)](http://badges.mit-license.org)
+
+**[MIT license](http://opensource.org/licenses/mit-license.php)**
+- Copyright 2021 © Francesco Vigni
