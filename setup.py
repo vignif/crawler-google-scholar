@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name="CrawlerGoogleScholar",
+    name="crawlergooglescholar",
     version="0.1",
     description="A crawler to download researchers' statistics from google scholar",
     long_description="This bot crawls and downloads statistics and pictures from google scholar's researchers. Single threaded as well as multithreading scripts are provided.",
@@ -10,7 +10,7 @@ setup(
     author_email="vignif@gmail.com",
     license="MIT",
     keywords="crawler researchers professors google scholar statistics",
-    packages=["crawler-google-scholar"],
-    install_requires=["bs4", "pandas", "aiohttp", "asyncio"],
+    packages=["crawlergooglescholar"],
+    install_requires=["bs4", "pandas", "aiohttp", "asyncio", "openpyxl"],
     zip_safe=False,
 )
