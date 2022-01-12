@@ -18,8 +18,7 @@ import asyncio
 import bs4
 import re
 from pandas import read_excel
-from utils import enable_debug_mode
-
+from utils import enable_debug_mode, init_file, close_file, data_not_available
 
 # set debut to true if you run a local server for testing
 debug = False
@@ -34,8 +33,7 @@ file_name = "myFile.xlsx"  # name of your excel file
 # define your output filename
 output = "stats.txt"
 
-df = read_excel(file_name, sheet_name=my_sheet)
-
+df = read_excel(file_name, sheet_name=my_sheet, engine="openpyxl")
 
 web_site, base_url, to_cut = enable_debug_mode(debug)
 
@@ -165,7 +163,7 @@ def print_all_pages(n, out):
     higher level of fetch_all, this function is computing the complete urls
     and passing them to fetch_all for a deeper investigation
     """
-    f = init_file(out)
+    f = init_file(out, df)
     pages = create_links(n)
     # print(pages)
     tasks = []

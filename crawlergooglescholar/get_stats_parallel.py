@@ -4,7 +4,7 @@ from pandas import read_excel
 import time
 import bs4
 import re
-from utils import enable_debug_mode
+from utils import enable_debug_mode, init_file, close_file
 
 # enable_disable_debug_mode
 # debug=True / False
@@ -15,7 +15,7 @@ file_name = "Research Statistics.xlsx"  # name of your excel file
 headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
 }
-df = read_excel(file_name, sheet_name=my_sheet)
+df = read_excel(file_name, sheet_name=my_sheet, engine="openpyxl")
 
 
 web_site, base_url, to_cut = enable_debug_mode(debug)
@@ -119,20 +119,6 @@ async def save_in_file(f, name, Data):
     )
 
 
-def init_file():
-    f = open("stats_parallel.txt", "a")
-    # create base columns Names
-    for i in range(len(df.columns)):
-        f.write(df.columns[i] + "; ")
-    f.write("\n")
-    return f
-
-
-def close_file(f):
-    print("File saved \n")
-    f.close()
-
-
 async def fetch_sub(session, url, f, name):
     async with session.get(url, timeout=60) as response:
         print("start fetch_sub", name)
@@ -181,7 +167,7 @@ async def fetch_all_urls(session, urls, loop, f):
 async def main():
     start = time.time()
     # aiohttp.ClientSession.head(headers)
-    f = init_file()
+    f = init_file("parallel.txt", df)
     loop = asyncio.get_event_loop()
     connector = aiohttp.TCPConnector(limit=4)
     async with aiohttp.ClientSession(

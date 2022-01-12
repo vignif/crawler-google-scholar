@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import time
-from utils import enable_debug_mode
+from utils import enable_debug_mode, init_file, close_file, data_not_available
 
 ##this script lets you collect researcher statistics from a list of researchers
 ##it crawls google scholar and collects
@@ -21,10 +21,10 @@ web_site, base_url = enable_debug_mode(False)
 # Source excel for researcher names
 # names are in first column
 # surname are in second column
-my_sheet = "Tabellenblatt1"
-file_name = "Research Statistics.xlsx"  # name of your excel file
+my_sheet = "Risultati Ricerca"
+file_name = "Risultati_ricerca.xlsx"  # name of your excel file
 
-df = read_excel(file_name, sheet_name=my_sheet)
+df = read_excel(file_name, sheet_name=my_sheet, engine="openpyxl")
 
 
 def download_mainpage(name, surname):
@@ -79,20 +79,6 @@ def save_in_file(f, i, Data):
     )
 
 
-def init_file():
-    f = open("stats.txt", "a")
-    # create base columns Names
-    for i in range(len(df.columns)):
-        f.write(df.columns[i] + "; ")
-    f.write("\n")
-    return f
-
-
-def close_file(f):
-    print("File saved \n")
-    f.close()
-
-
 def name_surname():
     all = []
     for i in range(len(df)):
@@ -128,19 +114,14 @@ def find_and_extract_data(soup):
     n17 = hist[-3].text
     n18 = hist[-2].text
     n19 = hist[-1].text
-    print(Data)
     Data = [num_cit, h_index, i10_index, fields, n14, n15, n16, n17, n18, n19]
+    print(Data)
     return Data
-
-
-def data_not_available(f, name, surname, i):
-    print("Data not available for " + name + " " + surname + " in index " + str(i))
-    f.write("Data Not available for " + name + " " + surname + "\n")
 
 
 def main():
     # print("Let's download the statistics from google scholar\n")
-    f = init_file()
+    f = init_file("get_serial.txt", df)
     all = name_surname()
     size_db = len(name_surname())
 
@@ -156,7 +137,7 @@ def main():
 
         # if is not able to find the person, tell me and skip the data in the db
         if result is None:
-            data_not_available(f, name, surname, i)
+            data_not_available(f, name)
             continue
         else:
             link = result.find("a", href=re.compile(r"[/]([a-z]|[A-Z])\w+")).attrs[
