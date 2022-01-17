@@ -9,8 +9,6 @@
     make sure to create a folder named 'figures' in the same path where you run this script
     """
 
-
-from pandas import read_excel
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -21,15 +19,6 @@ from utils import enable_debug_mode
 ##this script lets you collect the profile pictures from researcher given a list of researchers
 ##it crawls google scholar
 
-my_sheet = "Tabellenblatt1"
-file_name = "Research Statistics.xlsx"  # name of your excel file
-
-try:
-    df = read_excel(file_name, sheet_name=my_sheet, engine="openpyxl")
-except BaseException as err:
-    print(f"Unexpected {err=}, {type(err)=}")
-    raise
-
 # evaluate performances
 start = time.time()
 
@@ -38,7 +27,7 @@ web_site, base_url = enable_debug_mode(False)
 # Source excel for researcher names
 # names are in first column
 # surname are in second column
-ind = df.index.values + 2
+# ind = df.index.values + 2
 
 
 def download_mainpage(name, surname):
@@ -52,7 +41,7 @@ def download_subpage(link):
     return r1.text
 
 
-def name_surname():
+def name_surname(df):
     all = []
     for i in range(len(df)):
         # print(df.iloc[i])
@@ -69,14 +58,14 @@ def data_not_available(name, surname, i):
     print("Data not available for " + name + " " + surname + " in index " + str(i))
 
 
-def main():
-    all = name_surname()
-    size_db = len(name_surname())
+def fetch(df):
+    all = name_surname(df)
+    size_db = len(name_surname(df))
     print("get picts: start now")
 
     for i in range(size_db):
-        name = name_surname()[i][0]
-        surname = name_surname()[i][1]
+        name = name_surname(df)[i][0]
+        surname = name_surname(df)[i][1]
         print(name, surname)
         ind = i + 2
         soup = BeautifulSoup(download_mainpage(name, surname), "html.parser")
@@ -93,10 +82,17 @@ def main():
 
             central_table = soup.find(id="gsc_prf_w")
             img = central_table.find(id="gsc_prf_pup-img")
-            urllib.request.urlretrieve(
-                "https://scholar.google.com" + img["src"],
-                "figures/" + str(ind) + "-" + surname + ".jpg",
-            )
+            try:
+                urlpic = "https://scholar.google.com" + img["src"]
+                save_to = "figures/" + str(ind) + "-" + surname + ".jpg"
+                urllib.request.urlretrieve(urlpic, save_to)
+            except Exception as e:
+                print("Error: ", e)
+                if e.reason.errno == -2:
+                    print('try a new link')
+                    urlpic = img["src"]
+                    urllib.request.urlretrieve(urlpic, save_to)
+            print(urlpic)
             time.sleep(0.5)
 
     end = time.time()
@@ -105,4 +101,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    print('run this script from crawl.py')
