@@ -1,6 +1,7 @@
 """Utils for crawler google scholar
 """
-
+import pandas as pd
+import glob
 
 def enable_debug_mode(debug_bool):
     if debug_bool == True:
@@ -12,12 +13,16 @@ def enable_debug_mode(debug_bool):
     return web_site, base_url
 
 
-def init_file(name, df):
-    assert (type(name), str)
+def init_file(name):
     f = open(name, "a")
     # create base columns Names
+    t = glob.glob("*/template.txt")
+    if len(t) > 0:
+        df = pd.read_csv(t[0], sep=";", header=0)
+    else:
+        print("template invalid")
     for i in range(len(df.columns)):
-        f.write(df.columns[i] + "; ")
+        f.write(str(df.columns[i]) + "; ")
     f.write("\n")
     return f
 
@@ -30,3 +35,18 @@ def close_file(f):
 def data_not_available(f, name, surname=None, i=0):
     print("Data not available for " + name + " " + surname + " in index " + str(i))
     f.write("Data Not available for " + name + " " + surname + "\n")
+
+
+def name_surname(df):
+    all = []
+    for i in range(len(df)):
+        name = df.iloc[i][1]
+        surname = df.iloc[i][0]
+        if isinstance(name, str):
+            all.append([name, surname])
+        else:
+            break
+    return all
+
+if __name__ == "__main__":
+    init_file("name")

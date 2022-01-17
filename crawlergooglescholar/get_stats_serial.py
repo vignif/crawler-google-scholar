@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import time
-from utils import enable_debug_mode, init_file, close_file, data_not_available
+from utils import enable_debug_mode, init_file, close_file, data_not_available, name_surname
 
 ##this script lets you collect researcher statistics from a list of researchers
 ##it crawls google scholar and collects
@@ -21,11 +21,6 @@ web_site, base_url = enable_debug_mode(False)
 # Source excel for researcher names
 # names are in first column
 # surname are in second column
-my_sheet = "Risultati Ricerca"
-file_name = "Risultati_ricerca.xlsx"  # name of your excel file
-
-df = read_excel(file_name, sheet_name=my_sheet, engine="openpyxl")
-
 
 def download_mainpage(name, surname):
     r = requests.get(base_url + name + "+" + surname)
@@ -38,27 +33,12 @@ def download_subpage(link):
     return r1.text
 
 
-def save_in_file(f, i, Data):
+def save_in_file(df, f, i, Data):
     f.write(
-        df.iloc[i][0]
+        df.iloc[i][1]
         + "; "
-        + df.iloc[i][1]
-        + "; "
-        + df.iloc[i][2]
-        + "; "
-        + str(df.iloc[i][3])
-        + "; "
-        + str(df.iloc[i][4])
-        + "; "
-        + str(df.iloc[i][5])
-        + "; "
-        + str(df.iloc[i][6])
-        + "; "
-        + str(df.iloc[i][7])
-        + "; "
-        + str(df.iloc[i][8])
-        + "; "
-    )
+        + df.iloc[i][0]
+        + "; ")
     f.write(Data[0] + "; " + Data[1] + "; " + Data[2] + "; ")
     for i in Data[3]:
         f.write(i + ", ")
@@ -77,19 +57,6 @@ def save_in_file(f, i, Data):
         + Data[9]
         + "\n"
     )
-
-
-def name_surname():
-    all = []
-    for i in range(len(df)):
-        name = df.iloc[i][1]
-        surname = df.iloc[i][0]
-        if isinstance(name, str):
-            all.append([name, surname])
-        else:
-            break
-    return all
-
 
 def find_and_extract_data(soup):
     central_table = soup.find(id="gsc_prf_w")
@@ -119,15 +86,15 @@ def find_and_extract_data(soup):
     return Data
 
 
-def main():
+def fetch(df):
     # print("Let's download the statistics from google scholar\n")
-    f = init_file("get_serial.txt", df)
-    all = name_surname()
-    size_db = len(name_surname())
+    f = init_file("get_serial.txt")
+    all = name_surname(df)
+    size_db = len(name_surname(df))
 
     for i in range(size_db):
-        name = name_surname()[i][0]
-        surname = name_surname()[i][1]
+        name = name_surname(df)[i][0]
+        surname = name_surname(df)[i][1]
 
         # print("Status: %3.2f%%" % (i/size_db*100))
 
@@ -145,7 +112,7 @@ def main():
             ]
             soup = BeautifulSoup(download_subpage(link), "html.parser")
             Data = find_and_extract_data(soup)
-            save_in_file(f, i, Data)
+            save_in_file(df, f, i, Data)
 
     close_file(f)
 
@@ -155,4 +122,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    print('run this script from crawl.py')
+    # fetch(df)

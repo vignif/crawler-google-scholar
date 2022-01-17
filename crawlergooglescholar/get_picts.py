@@ -14,7 +14,7 @@ from bs4 import BeautifulSoup
 import re
 import time
 import urllib
-from utils import enable_debug_mode
+from utils import enable_debug_mode, name_surname
 
 ##this script lets you collect the profile pictures from researcher given a list of researchers
 ##it crawls google scholar
@@ -39,19 +39,6 @@ def download_mainpage(name, surname):
 def download_subpage(link):
     r1 = requests.get(web_site + link)
     return r1.text
-
-
-def name_surname(df):
-    all = []
-    for i in range(len(df)):
-        # print(df.iloc[i])
-        name = df.iloc[i][1]
-        surname = df.iloc[i][0]
-        if isinstance(name, str):
-            all.append([name, surname])
-        else:
-            break
-    return all
 
 
 def data_not_available(name, surname, i):
