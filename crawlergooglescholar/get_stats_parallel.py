@@ -4,7 +4,7 @@ from pandas import read_excel
 import time
 import bs4
 import re
-from utils import enable_debug_mode, init_file, close_file, name_surname
+from utils import enable_debug_mode, init_file, close_file, name_surname, save_in_file
 
 # enable_disable_debug_mode
 # debug=True / False
@@ -75,32 +75,6 @@ def define_urls(df):
         for i in range(len(name_surname(df)))
     ]
     return urls
-
-
-async def save_in_file(f, name, Data):
-    temp_name_list = name.split("+")
-    name = temp_name_list[0]
-    surname = temp_name_list[1]
-    print("saving: " + name + " " + surname)
-    f.write(name + "; " + surname + "; ")
-    f.write(Data[0] + "; " + Data[1] + "; " + Data[2] + "; ")
-    for i in Data[3]:
-        f.write(i + ", ")
-    f.write(
-        "; "
-        + Data[4]
-        + "; "
-        + Data[5]
-        + "; "
-        + Data[6]
-        + " ;"
-        + Data[7]
-        + "; "
-        + Data[8]
-        + "; "
-        + Data[9]
-        + "\n"
-    )
 
 
 async def fetch_sub(session, url, f, name):

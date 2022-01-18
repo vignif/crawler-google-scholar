@@ -23,7 +23,8 @@ from utils import (
     init_file,
     close_file,
     data_not_available,
-    cut
+    cut,
+    save_in_file
 )
 
 # set debut to true if you run a local server for testing
@@ -124,8 +125,7 @@ async def fetch_all(url, f):
                     Data = await find_and_extract_data(soup)
                     # print(await get_name(web_site+link))
                     # a = await store_in_list(L, name, Data)
-
-                    # await save_in_file(f, name, Data)
+                    await save_in_file(f, name, Data)
 
 def create_links(df, n):
     """

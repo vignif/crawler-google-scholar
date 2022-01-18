@@ -61,5 +61,37 @@ def cut(L, n):
         n = len(L)
     return L[:n]
 
+async def save_in_file(f, name, Data):
+    """used in coroutine and parallel scripts
+
+    Args:
+        f (file handle): reference for saving data in disk
+        name (str): name of the researcher
+        Data (pandas dataframe): in memory data 
+    """
+    temp_name_list = name.split("+")
+    name = temp_name_list[0]
+    surname = temp_name_list[1]
+    print("saving: " + name + " " + surname)
+    f.write(name + "; " + surname + "; ")
+    f.write(Data[0] + "; " + Data[1] + "; " + Data[2] + "; ")
+    for i in Data[3]:
+        f.write(i + ", ")
+    f.write(
+        "; "
+        + Data[4]
+        + "; "
+        + Data[5]
+        + "; "
+        + Data[6]
+        + " ;"
+        + Data[7]
+        + "; "
+        + Data[8]
+        + "; "
+        + Data[9]
+        + "\n"
+    )
+    
 if __name__ == "__main__":
     init_file("name")
