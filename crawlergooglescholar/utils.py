@@ -15,6 +15,7 @@ def enable_debug_mode(debug_bool):
 
 def init_file(name):
     f = open(name, "a")
+    print("Output file opened")
     # create base columns Names
     t = glob.glob("*/template.txt")
     if len(t) > 0:
@@ -47,6 +48,18 @@ def name_surname(df):
         else:
             break
     return all
+
+
+def cut(L, n):
+    """
+    Takes a list [L] and crop the first n elements
+    this fuction is useful for testing
+    i.e if your file is really big and you just want to receive the stats of
+    the first 5 researcher set n=5 in main()
+    """
+    if n == 0:
+        n = len(L)
+    return L[:n]
 
 if __name__ == "__main__":
     init_file("name")

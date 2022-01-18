@@ -7,6 +7,7 @@ import pandas as pd
 from get_picts import fetch as pictures
 from get_stats_serial import fetch as serial
 from get_stats_parallel import outer_fetch as parallel
+from get_stats_coroutine import outer_fetch as coroutine
 
 # Create the parser
 my_parser = argparse.ArgumentParser(description='Crawl and download statistics and public pictures of researchers from google scholar')
@@ -30,7 +31,7 @@ input_file = args.file
 crawl_type = args.type
 
 if not os.path.isfile(input_file):
-    print('The filepath specified does not exist')
+    print(f'The filepath specified {input_file} does not exist')
     sys.exit()
 
 if input_file.endswith('.txt'):
@@ -49,8 +50,8 @@ if __name__ == "__main__":
         serial(df)
     elif crawl_type == "parallel":
         parallel(df)
-    # elif crawl_type == "coroutine":
-    #     coroutine(df)
+    elif crawl_type == "coroutine":
+        coroutine(df)
     else:
         print("Error on type of crawler requested")   
 

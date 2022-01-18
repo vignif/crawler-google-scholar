@@ -151,7 +151,7 @@ async def fetch_all_urls(session, urls, loop, f):
 async def main(df):
     start = time.time()
     # aiohttp.ClientSession.head(headers)
-    f = init_file("parallel.txt")
+    f = init_file("out_parallel.txt")
     loop = asyncio.get_event_loop()
     connector = aiohttp.TCPConnector(limit=4)
     async with aiohttp.ClientSession(

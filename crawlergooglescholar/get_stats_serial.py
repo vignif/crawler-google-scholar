@@ -1,4 +1,3 @@
-from pandas import read_excel
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -88,7 +87,7 @@ def find_and_extract_data(soup):
 
 def fetch(df):
     # print("Let's download the statistics from google scholar\n")
-    f = init_file("get_serial.txt")
+    f = init_file("out_serial.txt")
     all = name_surname(df)
     size_db = len(name_surname(df))
 
