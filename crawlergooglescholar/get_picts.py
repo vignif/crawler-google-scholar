@@ -14,7 +14,7 @@ from bs4 import BeautifulSoup
 import re
 import time
 import urllib
-from utils import enable_debug_mode, name_surname
+from .utils import enable_debug_mode, name_surname
 
 ##this script lets you collect the profile pictures from researcher given a list of researchers
 ##it crawls google scholar
@@ -76,7 +76,7 @@ def fetch(df):
             except Exception as e:
                 print("Error: ", e)
                 if e.reason.errno == -2:
-                    print('try a new link')
+                    print("try a new link")
                     urlpic = img["src"]
                     urllib.request.urlretrieve(urlpic, save_to)
             print(urlpic)
@@ -88,4 +88,4 @@ def fetch(df):
 
 
 if __name__ == "__main__":
-    print('run this script from crawl.py')
+    print("run this script from crawl.py")

@@ -17,8 +17,7 @@ import aiohttp
 import asyncio
 import bs4
 import re
-from pandas import read_excel
-from utils import (
+from .utils import (
     enable_debug_mode,
     init_file,
     close_file,

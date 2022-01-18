@@ -2,7 +2,13 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import time
-from utils import enable_debug_mode, init_file, close_file, data_not_available, name_surname
+from .utils import (
+    enable_debug_mode,
+    init_file,
+    close_file,
+    data_not_available,
+    name_surname,
+)
 
 ##this script lets you collect researcher statistics from a list of researchers
 ##it crawls google scholar and collects
@@ -21,6 +27,7 @@ web_site, base_url = enable_debug_mode(False)
 # names are in first column
 # surname are in second column
 
+
 def download_mainpage(name, surname):
     r = requests.get(base_url + name + "+" + surname)
     print(r.status_code)
@@ -33,11 +40,7 @@ def download_subpage(link):
 
 
 def save_in_file(df, f, i, Data):
-    f.write(
-        df.iloc[i][1]
-        + "; "
-        + df.iloc[i][0]
-        + "; ")
+    f.write(df.iloc[i][1] + "; " + df.iloc[i][0] + "; ")
     f.write(Data[0] + "; " + Data[1] + "; " + Data[2] + "; ")
     for i in Data[3]:
         f.write(i + ", ")
@@ -56,6 +59,7 @@ def save_in_file(df, f, i, Data):
         + Data[9]
         + "\n"
     )
+
 
 def find_and_extract_data(soup):
     central_table = soup.find(id="gsc_prf_w")
@@ -121,5 +125,5 @@ def fetch(df):
 
 
 if __name__ == "__main__":
-    print('run this script from crawl.py')
+    print("run this script from crawl.py")
     # fetch(df)

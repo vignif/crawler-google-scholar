@@ -1,10 +1,9 @@
 import aiohttp
 import asyncio
-from pandas import read_excel
 import time
 import bs4
 import re
-from utils import enable_debug_mode, init_file, close_file, name_surname, save_in_file
+from .utils import enable_debug_mode, init_file, close_file, name_surname, save_in_file
 
 # enable_disable_debug_mode
 # debug=True / False
@@ -16,7 +15,8 @@ headers = {
 }
 web_site, base_url = enable_debug_mode(debug)
 
-to_cut=len(base_url)
+to_cut = len(base_url)
+
 
 def cut(L, n):
     "takes a list [L] and crop the first n elements"
@@ -147,4 +147,4 @@ def outer_fetch(df):
 
 
 if __name__ == "__main__":
-    print('run this script from crawl.py')
+    print("run this script from crawl.py")

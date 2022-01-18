@@ -4,10 +4,10 @@ import os
 import sys
 import pandas as pd
 
-from get_picts import fetch as pictures
-from get_stats_serial import fetch as serial
-from get_stats_parallel import outer_fetch as parallel
-from get_stats_coroutine import outer_fetch as coroutine
+from .get_picts import fetch as pictures
+from .get_stats_serial import fetch as serial
+from .get_stats_parallel import outer_fetch as parallel
+from .get_stats_coroutine import outer_fetch as coroutine
 
 # Create the parser
 my_parser = argparse.ArgumentParser(description='Crawl and download statistics and public pictures of researchers from google scholar')
