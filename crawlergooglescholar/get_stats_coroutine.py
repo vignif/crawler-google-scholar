@@ -18,7 +18,13 @@ import asyncio
 import bs4
 import re
 from pandas import read_excel
-from utils import enable_debug_mode, init_file, close_file, data_not_available
+from utils import (
+    enable_debug_mode,
+    init_file,
+    close_file,
+    data_not_available,
+    cut
+)
 
 # set debut to true if you run a local server for testing
 debug = False
@@ -26,16 +32,12 @@ debug = False
 # set verbose to true to get additional infos in nested functions
 verbose = True
 
-# input file and table of the xlsx
-my_sheet = "newFile"
-file_name = "myFile.xlsx"  # name of your excel file
-
 # define your output filename
-output = "stats.txt"
+output = "coroutine.txt"
 
-df = read_excel(file_name, sheet_name=my_sheet, engine="openpyxl")
+web_site, base_url = enable_debug_mode(debug)
 
-web_site, base_url, to_cut = enable_debug_mode(debug)
+to_cut = len(base_url)
 
 
 async def get_name(url):
@@ -121,50 +123,34 @@ async def fetch_all(url, f):
                     soup = bs4.BeautifulSoup(html, "html.parser")
                     Data = await find_and_extract_data(soup)
                     # print(await get_name(web_site+link))
-                    a = await store_in_list(L, name, Data)
+                    # a = await store_in_list(L, name, Data)
 
-                    await save_in_file(f, name, Data)
+                    # await save_in_file(f, name, Data)
 
-
-def cut(L, n):
-    """
-    Takes a list [L] and crop the first n elements
-    this fuction is useful for testing
-    i.e if your file is really big and you just want to receive the stats of
-    the first 5 researcher set n=5 in main()
-    """
-    if n == 0:
-        n = len(L)
-    return L[:n]
-
-
-def create_links(n):
+def create_links(df, n):
     """
     Given a name and surname of the input file, this function create the url string
     to be given for the request
     """
-    all = []
+    all=[]
     for i in range(len(df)):
         name = df.iloc[i][1]
         surname = df.iloc[i][0]
-        if isinstance(name, str) and isinstance(
-            surname, str
-        ):  # the couple name, surname must be given in the xlsx file
-            all.append(base_url + name + "+" + surname)
+        if isinstance(name, str) and isinstance(surname,str): # the couple name, surname must be given in the xlsx file
+            all.append(base_url+name+"+"+surname)
         else:
             break
-    all = cut(all, n)
+    all=cut(all,n)
     return all
 
-
-def print_all_pages(n, out):
+def print_all_pages(df, out, n):
     """
     iteratively initiating a new task for crawls
     higher level of fetch_all, this function is computing the complete urls
     and passing them to fetch_all for a deeper investigation
     """
-    f = init_file(out, df)
-    pages = create_links(n)
+    f = init_file(out)
+    pages = create_links(df, n)
     # print(pages)
     tasks = []
     loop = asyncio.new_event_loop()
@@ -179,15 +165,17 @@ def print_all_pages(n, out):
     close_file(f)
 
 
-def main(out_file):
+def outer_fetch(df):
     """
     main function check for all the names in the file_name
     set n to crawl only the first [n] rows of your researcher file_name
     if n=0 it takes all the rows of the input file
     """
+    out_file = "out_coroutine.txt"
     n = 0
-    print_all_pages(n, out_file)
+    print_all_pages(df, out_file, n)
 
 
 if __name__ == "__main__":
-    main(output)
+    print("run this script from crawl.py")
+    # outer_fetch(df)
