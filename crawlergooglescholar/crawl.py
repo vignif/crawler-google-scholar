@@ -4,8 +4,9 @@ import os
 import sys
 import pandas as pd
 
-from get_picts import fetch as fetchpictures
-from get_stats_serial import fetch as fetchserial
+from get_picts import fetch as pictures
+from get_stats_serial import fetch as serial
+from get_stats_parallel import outer_fetch as parallel
 
 # Create the parser
 my_parser = argparse.ArgumentParser(description='Crawl and download statistics and public pictures of researchers from google scholar')
@@ -43,11 +44,11 @@ else:
 
 if __name__ == "__main__":
     if crawl_type == "picts":
-        fetchpictures(df)
+        pictures(df)
     elif crawl_type == "serial":
-        fetchserial(df)
-    # elif crawl_type == "parallel":
-    #     parallel(df)
+        serial(df)
+    elif crawl_type == "parallel":
+        parallel(df)
     # elif crawl_type == "coroutine":
     #     coroutine(df)
     else:

@@ -4,39 +4,23 @@ from pandas import read_excel
 import time
 import bs4
 import re
-from utils import enable_debug_mode, init_file, close_file
+from utils import enable_debug_mode, init_file, close_file, name_surname
 
 # enable_disable_debug_mode
 # debug=True / False
 debug = 0
 
-my_sheet = "Tabellenblatt1"
-file_name = "Research Statistics.xlsx"  # name of your excel file
+
 headers = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36"
 }
-df = read_excel(file_name, sheet_name=my_sheet, engine="openpyxl")
+web_site, base_url = enable_debug_mode(debug)
 
-
-web_site, base_url, to_cut = enable_debug_mode(debug)
-
+to_cut=len(base_url)
 
 def cut(L, n):
     "takes a list [L] and crop the first n elements"
     return L[:n]
-
-
-def name_surname():
-    all = []
-    for i in range(len(df)):
-        name = df.iloc[i][1]
-        surname = df.iloc[i][0]
-        if isinstance(name, str):
-            all.append([name, surname])
-        else:
-            break
-    # all=cut(all,3)
-    return all
 
 
 def response_debug(response, value):
@@ -84,11 +68,11 @@ async def find_and_extract_data(soup):
     return Data
 
 
-def define_urls():
-    all = name_surname()
+def define_urls(df):
+    all = name_surname(df)
     urls = [
-        base_url + name_surname()[i][0] + "+" + name_surname()[i][1]
-        for i in range(len(name_surname()))
+        base_url + name_surname(df)[i][0] + "+" + name_surname(df)[i][1]
+        for i in range(len(name_surname(df)))
     ]
     return urls
 
@@ -164,16 +148,16 @@ async def fetch_all_urls(session, urls, loop, f):
     return results
 
 
-async def main():
+async def main(df):
     start = time.time()
     # aiohttp.ClientSession.head(headers)
-    f = init_file("parallel.txt", df)
+    f = init_file("parallel.txt")
     loop = asyncio.get_event_loop()
     connector = aiohttp.TCPConnector(limit=4)
     async with aiohttp.ClientSession(
         connector=connector, loop=loop, headers=headers
     ) as session:
-        urls = define_urls()
+        urls = define_urls(df)
         html = await fetch_all_urls(session, urls, loop, f)
         # print(html)
 
@@ -183,6 +167,10 @@ async def main():
     print(end - start)
 
 
-if __name__ == "__main__":
+def outer_fetch(df):
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    loop.run_until_complete(main(df))
+
+
+if __name__ == "__main__":
+    print('run this script from crawl.py')
